@@ -1,51 +1,119 @@
-"use client";
-
-import { useState } from "react";
+import Script from "next/script";
 
 export default function BellatronPage() {
-  const [log, setLog] = useState("");
-  const [result, setResult] = useState<any>(null);
-  const [loading, setLoading] = useState(false);
-
-  async function analyze() {
-    setLoading(true);
-    setResult(null);
-
-    const r = await fetch("/api/bellatron/analyze", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ log_text: log }),
-    });
-
-    const data = await r.json().catch(() => ({}));
-    setResult({ status: r.status, data });
-    setLoading(false);
-  }
-
   return (
-    <main className="min-h-screen bg-black text-white p-6">
-      <h1 className="text-2xl font-semibold">WillexOS · Bellatron</h1>
+    <>
+      {/* Styles */}
+      <link rel="stylesheet" href="/assets/css/style.css" />
+      <link rel="stylesheet" href="/assets/css/bellatron.css" />
 
-      <textarea
-        className="mt-4 w-full h-64 bg-neutral-900 border border-neutral-700 rounded p-3 font-mono text-sm"
-        placeholder="Paste PositionSense log here…"
-        value={log}
-        onChange={(e) => setLog(e.target.value)}
+      {/* Chart.js */}
+      <Script
+        src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"
+        strategy="beforeInteractive"
       />
 
-      <button
-        className="mt-4 bg-lime-400 text-black px-4 py-2 rounded font-semibold disabled:opacity-50"
-        disabled={!log.trim() || loading}
-        onClick={analyze}
-      >
-        {loading ? "Analyzing…" : "Analyze"}
-      </button>
+      {/* Bellatron JS */}
+      <Script src="/assets/js/bellatron.js" strategy="afterInteractive" />
 
-      {result && (
-        <pre className="mt-4 bg-neutral-900 border border-neutral-700 rounded p-3 text-xs overflow-auto">
-          {JSON.stringify(result, null, 2)}
-        </pre>
-      )}
-    </main>
+      <main data-page="bellatron">
+        <section className="hero reveal">
+          <div className="hero-main">
+            <div className="hero-kicker">
+              Installer Tool • Log Analysis • Engine v2.4
+            </div>
+
+            <h1>B.E.L.L.A — diagnose faults from PositionSense logs.</h1>
+
+            <p>
+              Upload PositionSense logs and receive ranked fault probabilities,
+              installer recommendations, confidence grading, and a visual
+              timeline of events.
+            </p>
+
+            <div className="hero-actions">
+              <label className="btn btn-primary bellatron-file">
+                <input id="logFile" type="file" accept=".txt,.log" hidden />
+                <span>Select log file</span>
+              </label>
+
+              <button
+                id="analyzeBtn"
+                className="btn btn-ghost"
+                type="button"
+                disabled
+              >
+                Analyze
+              </button>
+            </div>
+
+            <div className="bellatron-meta">
+              <span id="fileName" className="chip">
+                No file selected
+              </span>
+              <span id="confidenceChip" className="chip chip-muted">
+                Confidence: —
+              </span>
+            </div>
+          </div>
+        </section>
+
+        <section className="section section-soft reveal">
+          <h2>Visual timeline</h2>
+          <p>
+            Each point is a close attempt. Hover to see outcome, duration, and
+            humidity correlation.
+          </p>
+
+          <div className="cards">
+            <article className="card bellatron-wide">
+              <div className="bellatron-chart-wrap">
+                <canvas id="timelineChart" height={120}></canvas>
+              </div>
+
+              <div className="bellatron-episodes">
+                <h3>Episodes</h3>
+                <div
+                  id="episodesList"
+                  className="bellatron-list muted"
+                >
+                  Upload a log to populate episodes.
+                </div>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <section className="section reveal">
+          <h2>Likely causes</h2>
+          <p>
+            Weighted and normalized — the top item is the primary hypothesis.
+          </p>
+
+          <div className="cards">
+            <article className="card">
+              <h3>Ranked causes</h3>
+              <div id="causesList" className="bellatron-list muted">
+                Upload a log to populate results.
+              </div>
+            </article>
+
+            <article className="card">
+              <h3>Installer recommendations</h3>
+              <div id="recsList" className="bellatron-list muted">
+                Upload a log to populate recommendations.
+              </div>
+            </article>
+
+            <article className="card">
+              <h3>Notes</h3>
+              <div id="notesList" className="bellatron-list muted">
+                Upload a log to populate notes.
+              </div>
+            </article>
+          </div>
+        </section>
+      </main>
+    </>
   );
 }
